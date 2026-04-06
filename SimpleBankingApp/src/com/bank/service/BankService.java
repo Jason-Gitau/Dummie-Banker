@@ -1,8 +1,12 @@
 package com.bank.service;
 
 import java.util.HashMap;
+
 import java.util.Map;
 import com.bank.model.Account;
+import com.bank.model.NormalAccount;
+import com.bank.model.SavingAccount;
+
 import com.bank.util.FileUtils;
 
 public class BankService {
@@ -24,23 +28,24 @@ public class BankService {
     }
 
     // 2. Method to Create an Account
-    public void createAccount(String accNumber, String ownerName, String pin, double initialBalance) {
-        // Check if account number already exists
-        if (accounts.containsKey(accNumber)) {
+    public void createAccount(String accNumber, String ownerName, String pin, double initialBalance,String accountType) {
+    	if (accounts.containsKey(accNumber)) {
             System.out.println("Account number already exists!");
             return;
         }
 
-        // Create new Account object
-        Account newAccount = new Account(accNumber, ownerName, pin, initialBalance);
+        Account newAccount;
         
+        // Factory pattern: Create correct account type
+        if (accountType.equalsIgnoreCase("SAVINGS")) {
+            newAccount = new SavingAccount(accNumber, ownerName, pin, initialBalance);
+        } else {
+            newAccount = new NormalAccount(accNumber, ownerName, pin, initialBalance);
+        }
         
-        // Store it in the Map (Key = accNumber, Value = newAccount)
         accounts.put(accNumber, newAccount);
-        
-        //save to file after creation
         FileUtils.saveAccounts(accounts);
-        System.out.println("Account created successfully for " + ownerName);
+        System.out.println(accountType + " account created successfully for " + ownerName);  
     }
 
     // 3. Method to Find an Account

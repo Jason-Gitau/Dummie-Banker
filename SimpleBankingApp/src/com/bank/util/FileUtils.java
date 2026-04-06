@@ -44,12 +44,11 @@ public class FileUtils {
 			
 			try(BufferedReader reader = new BufferedReader(new FileReader(File_Name))){
 				String line;
-				int lineCount = 0;
-	            int successCount = 0;
+				
 	            Account currentAccount = null;
 				
 				while((line = reader.readLine()) != null) {
-					lineCount++;
+					
 					
 					// Skip empty lines
 	                if (line.trim().isEmpty()) {
@@ -81,7 +80,7 @@ public class FileUtils {
 					Account acc =Account.fromFileString(line);
 					if(acc != null) {
 						accounts.put(acc.getAccountNumber(), acc);
-						successCount++;
+						
 //						System.out.println("[DEBUG] Loaded account: " + acc.getAccountNumber());
 					}else {
 //	                    System.out.println("[DEBUG] Failed to parse line " + lineCount);

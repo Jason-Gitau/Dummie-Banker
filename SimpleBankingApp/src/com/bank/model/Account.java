@@ -2,34 +2,33 @@ package com.bank.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-public class Account { 
-	
-    private List<Transaction> transactionHistory;
-	
-//	1. field (state)
-//	we use private for encapsulation.only this class can touch them directly
-	private String accountNumber;
-	private String ownerName;
-	private String pin;
-	private double balance;
-	
-	
-//	2. constructor
-//	this runs when you create a new account object ( new Account(..)
-	public Account(String accountNumber,String ownerName,String pin,double initialBalance) {
-		this.accountNumber =accountNumber;
-		this.ownerName=ownerName;
-		this.pin=pin;
-		this.balance = initialBalance;
-		this.transactionHistory = new ArrayList<>(); // Initialize the list
+
+	public abstract class Account{
 		
-		// Record initial deposit as a transaction
-        if (initialBalance > 0) {
-            transactionHistory.add(new Transaction(Transaction.Type.DEPOSIT, initialBalance, "Initial Deposit"));
-        }
+		private String accountNumber;
+		private String ownerName;
+		private String pin;
+		private double balance;
+		protected List<Transaction> transactionHistory;
+		
+			public Account(String accountNumber,String ownerName,String pin,double initialBalance) {
+				this.accountNumber = accountNumber;
+				this.ownerName= ownerName;
+				this.pin =pin;
+				this.balance = initialBalance;
+				this.transactionHistory=new ArrayList<>();
+				
+				
+				if (initialBalance>0) {
+					transactionHistory.add(new Transaction(Transaction.Type.DEPOSIT,initialBalance,"Initial Deposit"));
+					
+				}
+				
 	}
-	
+		
 //	3. getters(accessors)
 //	allows other classes to read the data safely
 	public String getAccountNumber() {
@@ -41,8 +40,27 @@ public class Account {
 	public double getBalance() {
 		return balance;
 	}
+	 // Protected method for subclasses to add balance (e.g., for interest)
+    protected void addBalance(double amount) {
+        this.balance += amount;
+    }
+	public List<Transaction> getTransactionHistory() {
+		return transactionHistory;
+	}
+	   
+//	
+	
 
 //	4. methods( business logic)
+//	abstract
+	public abstract double calculateFee();
+	
+	public abstract void applyInterest();
+	
+	public abstract String getAccountType();
+	
+//	common methods
+	
 	public void deposit(double amount) {
 		if(amount>0) {
 			this.balance+=amount;
@@ -53,12 +71,25 @@ public class Account {
 			System.out.println("Invalid deposit amount.");
 		}
 	}
+	
+	
 	public boolean withdraw(double amount) {
-		if(amount>0 && amount<=this.balance) {
-			this.balance-=amount;
+		double fee=calculateFee();
+		double totalDeduction = amount + fee;
+		
+		if(amount>0 && totalDeduction<=this.balance) {
+			this.balance-=totalDeduction;
 			transactionHistory.add(new Transaction(Transaction.Type.WITHDRAWAL, amount, "Withdrawal"));
-			System.out.println("Successfully withdrew: " + amount);
-			return true ;
+			// Record fee as separate transaction if fee > 0
+            if (fee > 0) {
+                transactionHistory.add(new Transaction(Transaction.Type.WITHDRAWAL, fee, "Transaction Fee"));
+            }
+            
+            System.out.println("Successfully withdrew: " + amount);
+            if (fee > 0) {
+                System.out.println("Transaction fee charged: " + fee);
+            }
+            return true;
 			
 		}else {
 			System.out.println("Invalid withdrawal amount or insufficient funds.");
@@ -71,53 +102,10 @@ public class Account {
 		return this.pin.equals(inputPin);
 	}
 	
-//	convert account objects into a single line of text
-	public String toFileString() {
-		return this.accountNumber+ "|" + this.ownerName + "|" + this.pin + "|" + this.balance;
-	}
-	
-//	create an Account object from a single line of text
-	public static Account fromFileString(String line) {
-        if (line == null || line.trim().isEmpty()) {
-            return null;
-        }
-        
-        String[] parts = line.trim().split("\\|");
-        
-//        System.out.println("[DEBUG] Parsing: " + line);
-//        System.out.println("[DEBUG] Parts count: " + parts.length);
-        for (int i = 0; i < parts.length; i++) {
-//            System.out.println("[DEBUG] Part " + i + ": '" + parts[i] + "'");
-        }
-        
-        if (parts.length == 4) {
-            try {
-                String accNum = parts[0].trim();
-                String name = parts[1].trim();
-                String pin = parts[2].trim();
-                double balance = Double.parseDouble(parts[3].trim());
-                
-                Account acc = new Account(accNum, name, pin, balance);
-//                System.out.println("[DEBUG] Successfully created account: " + accNum);
-                return acc;
-            } catch (NumberFormatException e) {
-                System.out.println("[ERROR] Invalid balance format: " + parts[3]);
-                return null;
-            }
-        } else {
-            System.out.println("[ERROR] Expected 4 parts, got " + parts.length);
-            return null;
-        }
-	}
-	
-    // Get transaction history
-    public List<Transaction> getTransactionHistory() {
-        return transactionHistory;
-    }
-    
-    // Print last N transactions
+    // Print transaction history
     public void printTransactionHistory(int limit) {
         System.out.println("\n--- Transaction History ---");
+        System.out.println("Account Type: " + getAccountType());
         int start = Math.max(0, transactionHistory.size() - limit);
         for (int i = start; i < transactionHistory.size(); i++) {
             System.out.println(transactionHistory.get(i));
@@ -125,4 +113,39 @@ public class Account {
         System.out.println("---------------------------");
     }
 		
+	
+	
+	
+//    saving to the file
+    
+	
+//	convert account objects into a single line of text
+	public String toFileString() {
+		return this.accountNumber+ "|" + this.ownerName + "|" + this.pin + "|" + this.balance;
+	}
+	
+//	create an Account object from a single line of text
+	public static Account fromFileString(String line) {
+        String[]parts = line.split("\\|");
+        
+        if (parts.length <5) {
+        	return null;
+        }
+        
+        String accountType =parts[0];
+        String accNum = parts[1];
+        String name =parts[2];
+        String pin = parts[3];
+        double balance =Double.parseDouble(parts[4]);
+        
+//        factory patters
+        if(accountType.equals("SAVINGS")){
+        	double interestRate =(parts.length>5)? Double.parseDouble(parts[5]):0.05;
+        	return new SavingAccount(accNum,name,pin,balance,interestRate);
+        }else {
+        	return new NormalAccount(accNum,name,pin,balance);
+        }
+	}
+
+    
 }

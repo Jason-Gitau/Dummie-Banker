@@ -47,19 +47,28 @@ public class Main {
 
     // Helper Method: Handle Account Creation
     private static void createAccountFlow() {
-        System.out.print("Enter Account Number: ");
-        String accNum = scanner.next();
-        
-        System.out.print("Enter Owner Name: ");
-        String name = scanner.next();
-        
-        System.out.print("Enter PIN: ");
-        String pin = scanner.next();
-        
-        System.out.print("Enter Initial Deposit: ");
-        double balance = scanner.nextDouble();
-        
-        bankService.createAccount(accNum, name, pin, balance);
+    	 System.out.print("Enter Account Number: ");
+         String accNum = scanner.next();
+         
+         System.out.print("Enter Owner Name: ");
+         String name = scanner.next();
+         
+         System.out.print("Enter PIN: ");
+         String pin = scanner.next();
+         
+         // Choose account type
+         System.out.println("\nSelect Account Type:");
+         System.out.println("1. Normal Account (Has withdrawal fees, No interest)");
+         System.out.println("2. Savings Account (No fees, Earns 5% interest)");
+         System.out.print("Choose (1 or 2): ");
+         
+         int typeChoice = scanner.nextInt();
+         String accountType = (typeChoice == 2) ? "SAVINGS" : "NORMAL";
+         
+         System.out.print("Enter Initial Deposit: ");
+         double balance = scanner.nextDouble();
+         
+         bankService.createAccount(accNum, name, pin, balance, accountType);
     }
 
     // Helper Method: Handle Login and Session
@@ -90,8 +99,9 @@ public class Main {
             System.out.println("1. Check Balance");
             System.out.println("2. Deposit");
             System.out.println("3. Withdraw");
-            System.out.println("4. View Transaction History"); // NEW
-            System.out.println("5. Logout");
+            System.out.println("4. View Transaction History");
+            System.out.println("5. Apply Interest (Savings Only)");
+            System.out.println("6. Logout");
             System.out.print("Choose an option: ");
             
             if (!scanner.hasNextInt()) {
@@ -103,28 +113,33 @@ public class Main {
             int choice = scanner.nextInt();
             
             switch (choice) {
-                case 1:
-                    System.out.println("Current Balance: " + account.getBalance());
-                    break;
-                case 2:
-                    System.out.print("Enter amount to deposit: ");
-                    double depositAmount = scanner.nextDouble();
-                    account.deposit(depositAmount);
-                    FileUtils.saveAccounts(bankService.getAllAccounts());
-                    break;
-                case 3:
-                    System.out.print("Enter amount to withdraw: ");
-                    double withdrawAmount = scanner.nextDouble();
-                    account.withdraw(withdrawAmount);
-                    FileUtils.saveAccounts(bankService.getAllAccounts());
-                    break;
-                case 4: // NEW
-                    account.printTransactionHistory(10); // Show last 10
-                    break;
-                case 5:
-                    sessionActive = false;
-                    System.out.println("Logged out.");
-                    break;
+            case 1:
+                System.out.println("Current Balance: " + account.getBalance());
+                System.out.println("Account Type: " + account.getAccountType());
+                break;
+            case 2:
+                System.out.print("Enter amount to deposit: ");
+                double depositAmount = scanner.nextDouble();
+                account.deposit(depositAmount);
+                FileUtils.saveAccounts(bankService.getAllAccounts());
+                break;
+            case 3:
+                System.out.print("Enter amount to withdraw: ");
+                double withdrawAmount = scanner.nextDouble();
+                account.withdraw(withdrawAmount);
+                FileUtils.saveAccounts(bankService.getAllAccounts());
+                break;
+            case 4:
+                account.printTransactionHistory(10);
+                break;
+            case 5: 
+                account.applyInterest();
+                FileUtils.saveAccounts(bankService.getAllAccounts());
+                break;
+            case 6:
+                sessionActive = false;
+                System.out.println("Logged out.");
+                break;
                 default:
                     System.out.println("Invalid option!");
             }
