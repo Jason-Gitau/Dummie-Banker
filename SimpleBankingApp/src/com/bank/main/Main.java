@@ -3,6 +3,7 @@ package com.bank.main;
 import java.util.Scanner;
 import com.bank.service.BankService;
 import com.bank.util.FileUtils;
+import com.bank.dto.TransferResult;
 import com.bank.model.Account;
 
 public class Main {
@@ -89,6 +90,41 @@ public class Main {
             System.out.println("Login Failed! Check credentials.");
         }
     }
+    
+    
+    // Helper Method: Handle Fund Transfer
+    private static void transferFundsFlow(Account senderAccount) {
+        System.out.println("\n--- Transfer Funds ---");
+        
+        System.out.print("Enter Recipient Account Number: ");
+        String recipientAccNum = scanner.next();
+        
+        System.out.print("Enter Amount to Transfer: ");
+        
+        // Validate amount input
+        if (!scanner.hasNextDouble()) {
+            System.out.println("Invalid amount!");
+            scanner.next(); // consume invalid input
+            return;
+        }
+        
+        double amount = scanner.nextDouble();
+        
+        // Call the service to perform transfer
+        TransferResult result = bankService.transferFunds(
+            senderAccount.getAccountNumber(), 
+            recipientAccNum, 
+            amount
+        );
+        
+        // Display result
+        System.out.println(result.getMessage());
+        
+        // Save if successful (service already saves, but this ensures consistency)
+        if (result.isSuccessful()) {
+            FileUtils.saveAccounts(bankService.getAllAccounts());
+        }
+    }
 
     // Helper Method: Handle Logged-In Operations
        private static void handleUserSession(Account account) {
@@ -101,7 +137,8 @@ public class Main {
             System.out.println("3. Withdraw");
             System.out.println("4. View Transaction History");
             System.out.println("5. Apply Interest (Savings Only)");
-            System.out.println("6. Logout");
+            System.out.println("6. Transfer Funds");  // ✅ ADD THIS LINE
+            System.out.println("7. Logout"); 
             System.out.print("Choose an option: ");
             
             if (!scanner.hasNextInt()) {
@@ -136,7 +173,10 @@ public class Main {
                 account.applyInterest();
                 FileUtils.saveAccounts(bankService.getAllAccounts());
                 break;
-            case 6:
+            case 6:  
+                transferFundsFlow(account);
+                break;
+            case 7:  
                 sessionActive = false;
                 System.out.println("Logged out.");
                 break;

@@ -72,6 +72,16 @@ import java.time.format.DateTimeFormatter;
 		}
 	}
 	
+	 //  Overloaded deposit with custom description
+    public void deposit(double amount, String description) {
+        if (amount > 0) {
+            this.balance += amount;
+            transactionHistory.add(new Transaction(Transaction.Type.DEPOSIT, amount, description));
+            System.out.println("Successfully deposited: " + amount);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
 	
 	public boolean withdraw(double amount) {
 		double fee=calculateFee();
@@ -96,6 +106,29 @@ import java.time.format.DateTimeFormatter;
             return false; // Transaction failed
 		}
 	}
+	//  Overloaded withdraw with custom description
+    public boolean withdraw(double amount, String description) {
+        double fee = calculateFee();
+        double totalDeduction = amount + fee;
+        
+        if (amount > 0 && totalDeduction <= this.balance) {
+            this.balance -= totalDeduction;
+            transactionHistory.add(new Transaction(Transaction.Type.WITHDRAWAL, amount, description));
+            
+            if (fee > 0) {
+                transactionHistory.add(new Transaction(Transaction.Type.WITHDRAWAL, fee, "Transaction Fee"));
+            }
+            
+            System.out.println("Successfully withdrew: " + amount);
+            if (fee > 0) {
+                System.out.println("Transaction fee charged: " + fee);
+            }
+            return true;
+        } else {
+            System.out.println("Invalid withdrawal amount or insufficient funds (including fees).");
+            return false;
+        }
+    }
 	
 //	method to verify the pin
 	public boolean verifyPin(String inputPin) {

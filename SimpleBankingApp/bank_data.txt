@@ -1,7 +1,8 @@
-101|Jason|1234|1750.0
-	[06/04/2026 11:56] DEPOSIT: +2000.00 - Initial Deposit
-	[06/04/2026 11:56] WITHDRAWAL: -200.00 - Withdrawal
-	[06/04/2026 11:56] WITHDRAWAL: -50.00 - Transaction Fee
-102|Jason|1234|3150.0
-	[06/04/2026 11:57] DEPOSIT: +3000.00 - Initial Deposit
-	[06/04/2026 11:58] DEPOSIT: +150.00 - Monthly Interest (5.0%)
+103|Jason|1234|450.0
+	[11/04/2026 18:02] DEPOSIT: +1000.00 - Initial Deposit
+	[11/04/2026 18:03] WITHDRAWAL: -500.00 - Withdrawal
+	[11/04/2026 18:03] WITHDRAWAL: -50.00 - Transaction Fee
+104|Evans|1234|3000.0
+	[11/04/2026 18:02] DEPOSIT: +2000.00 - Initial Deposit
+	[11/04/2026 18:03] DEPOSIT: +500.00 - Deposit
+	[11/04/2026 18:03] DEPOSIT: +500.00 - Transfer from Account 103

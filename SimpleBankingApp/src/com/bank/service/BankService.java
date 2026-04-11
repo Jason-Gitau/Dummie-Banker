@@ -3,6 +3,8 @@ package com.bank.service;
 import java.util.HashMap;
 
 import java.util.Map;
+
+import com.bank.dto.TransferResult;
 import com.bank.model.Account;
 import com.bank.model.NormalAccount;
 import com.bank.model.SavingAccount;
@@ -81,6 +83,70 @@ public class BankService {
     		FileUtils.saveAccounts(accounts);
     	}
     }
+    
+    
+    public TransferResult transferFunds(String senderAccNum, String recipientAccNum, double amount) {
+        // Validation
+        if (!accounts.containsKey(senderAccNum)) {
+            return new TransferResult().failure("Sender account not found");
+        }
+        
+        if (!accounts.containsKey(recipientAccNum)) {
+            return new TransferResult().failure("Recipient account not found");
+        }
+        
+        if (senderAccNum.equals(recipientAccNum)) {
+            return new TransferResult().failure("Cannot transfer to your own account");
+        }
+        
+        if (amount <= 0) {
+            return new TransferResult().failure("Amount must be greater than zero");
+        }
+        
+        // Get accounts
+        Account sender = accounts.get(senderAccNum);
+        Account recipient = accounts.get(recipientAccNum);
+        
+        // Calculate fee
+        double fee = sender.calculateFee();
+        double totalDeduction = amount + fee;
+        
+        // Check balance
+        if (sender.getBalance() < totalDeduction) {
+            return new TransferResult().failure(
+                String.format("Insufficient funds. Required: KSh %.2f (including KSh %.2f fee)", 
+                    totalDeduction, fee)
+            );
+        }
+        
+        // Execute transfer
+        sender.withdraw(amount); // Fee already included in withdraw()
+        recipient.deposit(amount);
+        
+     // Custom description showing sender's account
+//        String transferDescription = String.format("Transfer from Account %s", senderAccNum);
+//        recipient.deposit(amount, transferDescription);
+        
+     // description showing recipient's account
+        String senderDescription = String.format("Transfer to Account %s", recipientAccNum);
+        sender.withdraw(amount, senderDescription);
+
+        String recipientDescription = String.format("Transfer from Account %s", senderAccNum);
+        recipient.deposit(amount, recipientDescription);
+        
+        // Save both accounts
+        FileUtils.saveAccounts(accounts);
+        
+        // Return success result
+        return new TransferResult().success(
+            senderAccNum, 
+            recipientAccNum, 
+            amount, 
+            fee, 
+            sender.getBalance()
+        );
+    }
+    
     
     
     // Helper to check total accounts (for debugging)
